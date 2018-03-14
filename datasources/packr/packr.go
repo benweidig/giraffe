@@ -4,7 +4,7 @@ import (
 	"github.com/gobuffalo/packr"
 )
 
-// Datasource uses a packr box for providing data
+// Datasource uses a packr.Box for providing data
 type Datasource struct {
 	Box       packr.Box // The Box containing all the templates
 	Extension string    // We need the extension to use convenience names

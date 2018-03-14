@@ -11,14 +11,14 @@ import (
 	"github.com/gin-gonic/gin/render"
 )
 
-// Giraffe is a gin html render
+// Giraffe is the main struct holding it all together
 type Giraffe struct {
 	config    Config
 	templates map[string]*template.Template
 	mutex     sync.RWMutex
 }
 
-// New creates a new Giraffe but bring your own config
+// New creates a new Giraffe but you have to bring your own config
 func New(config Config) *Giraffe {
 	g := &Giraffe{
 		config:    config,
@@ -26,6 +26,7 @@ func New(config Config) *Giraffe {
 		mutex:     sync.RWMutex{},
 	}
 
+	// We add our usual template funcs in New, because they are useful for everyone
 	g.PrepareTemplateFuncs()
 
 	return g
@@ -50,7 +51,7 @@ func Debug() *Giraffe {
 	return g
 }
 
-// Instance fulfills the gin.render.HTMLRender interface type
+// Instance fulfills the gin.render.HTMLRender interface type.
 func (g *Giraffe) Instance(name string, data interface{}) render.Render {
 	return Render{
 		Giraffe: g,
@@ -69,23 +70,25 @@ func (g *Giraffe) PrepareTemplateFuncs() {
 	}
 }
 
+// render does what it's called, it renders a template with the provided data.
+// It supports caching (if not disabled) and the provided funcs.
 func (g *Giraffe) render(out io.Writer, name string, data interface{}, useLayout bool) error {
 	// Try getting the template from cache
 	g.mutex.RLock()
 	tpl, ok := g.templates[name]
 	g.mutex.RUnlock()
 
-	// Check if found or if we shouldn't cache
+	// Check if found a template or if we shouldn't cache
 	if !ok || g.config.DisableCache {
 
-		// We need to add "include" here because it uses "data"
+		// We need to add "include" here and not in New(...) because it uses "data"
 		g.config.Funcs["include"] = func(layout string) (template.HTML, error) {
 			buf := new(bytes.Buffer)
 			err := g.render(buf, layout, data, false)
 			return template.HTML(buf.String()), err
 		}
 
-		// Load Layout template
+		// Load Layout template. At this point we don't support "non-layout"-based rendering.
 		layoutStr, err := g.config.Datasource.LoadContent(g.config.Layout)
 		if err != nil {
 			return err
@@ -96,7 +99,7 @@ func (g *Giraffe) render(out io.Writer, name string, data interface{}, useLayout
 		}
 		g.templates[g.config.Layout] = layoutTpl
 
-		// Load template
+		// Load the requested template
 		templateStr, err := g.config.Datasource.LoadContent(name)
 		if err != nil {
 			return err
@@ -108,10 +111,12 @@ func (g *Giraffe) render(out io.Writer, name string, data interface{}, useLayout
 			return err
 		}
 
-		// Cache template
-		g.mutex.Lock()
-		g.templates[name] = tpl
-		g.mutex.Unlock()
+		// Cache template if necessary
+		if g.config.DisableCache == false {
+			g.mutex.Lock()
+			g.templates[name] = tpl
+			g.mutex.Unlock()
+		}
 	}
 
 	// Check if we need to wrap the template in the layout
@@ -120,7 +125,7 @@ func (g *Giraffe) render(out io.Writer, name string, data interface{}, useLayout
 		execName = g.config.Layout
 	}
 
-	// Render
+	// Finally render the template
 	err := tpl.ExecuteTemplate(out, execName, data)
 
 	return err

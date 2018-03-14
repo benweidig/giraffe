@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 )
 
-// Datasource is a simple "load from disk" datasource
+// Datasource is a simple "load directly from disk" datasource
 type Datasource struct {
 	Root      string
 	Extension string

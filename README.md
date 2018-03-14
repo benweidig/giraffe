@@ -1,6 +1,6 @@
 # Giraffe [![Build Status](https://travis-ci.org/benweidig/giraffe.svg?branch=master)](https://travis-ci.org/benweidig/giraffe)
 
-An HTML Renderer for [Gin Gonic](https://gin-gonic.github.io/gin/) with support for layouts, partials and datasources like [packr](https://github.com/gobuffalo/packr).
+A Go template renderer I've created for usage with [Gin Gonic](https://gin-gonic.github.io/gin/), supporting layouts, partials and different datasources like [packr](https://github.com/gobuffalo/packr). It should be usable without Gin, at least I'm going to try in another project.
 
 
 ## Get it
@@ -103,6 +103,15 @@ A [packr.Box](https://github.com/gobuffalo/packr)-based datasource, no default i
 | Box       | The `packr.Box`                                                     |
 | Extension | The template extension (incl. the dot), so we can use shortes names |
 
+## Convenience names
+
+Templates are loaded by a more "convenient name" instead of the full/relative path. Partials are even shorter, you can ignore the partial folder name:
+
+```
+{{ partial "mypartial" . }}
+```
+
+To load the partial `mypartial` in the folder `partials`. Partials must reside in `partials` right now, so there's no need to write it all the time.
 
 ## License
 
