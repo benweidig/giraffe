@@ -11,13 +11,17 @@ go get -u github.com/benweidig/giraffe
 
 ## Use it
 
-### The simple way
+You can use `Giraffe` for simple templating, or with `Gin Gonic`. The package `gin` mimics the package `giraffe`, it even uses the same names, but the `Giraffe` is  `gin.HTMLRender` compatible.
 
-You can simply use `giraffe.Default()` to get a usable `giraffe`:
+If you're using the `gin`-part you might want to rename the import to `giraffe`, I assume it for the examples in the README.
+
+### The simple way for Gin
+
+You can simply use `giraffe.Default()` to get a usable `Giraffe` for `Gin Gonic`:
 
 ```
 import (
-    "github.com/benweidig/giraffe"
+    giraffe "github.com/benweidig/giraffe/gin"
 )
 
 func yourSetupMethodMaybe() {
@@ -42,11 +46,11 @@ Both versions have some sensible defaults:
 
 ### The harder way
 
-You can also create a `giraffe` with your own config:
+You can also create a `Giraffe` with your own config:
 
 ```
 import (
-    "github.com/benweidig/giraffe"
+    giraffe "github.com/benweidig/giraffe/gin"
     // You should rename the import or it will collide with packr
     gPacker "github.com/benweidig/giraffe/datasources/packr"
 )

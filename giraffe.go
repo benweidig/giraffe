@@ -8,7 +8,6 @@ import (
 	"sync"
 
 	"github.com/benweidig/giraffe/datasources/fs"
-	"github.com/gin-gonic/gin/render"
 )
 
 // Giraffe is the main struct holding it all together
@@ -51,29 +50,20 @@ func Debug() *Giraffe {
 	return g
 }
 
-// Instance fulfills the gin.render.HTMLRender interface type.
-func (g *Giraffe) Instance(name string, data interface{}) render.Render {
-	return Render{
-		Giraffe: g,
-		Name:    name,
-		Data:    data,
-	}
-}
-
 // PrepareTemplateFuncs adds the "partial" func and the user provided funcs to Giraffe
 func (g *Giraffe) PrepareTemplateFuncs() {
 	g.config.Funcs["partial"] = func(partial string, partialData interface{}) (template.HTML, error) {
 		buf := new(bytes.Buffer)
 		name := path.Join("partials", partial)
-		err := g.render(buf, name, partialData, false)
+		err := g.Render(buf, name, partialData, false)
 		return template.HTML(buf.String()), err
 	}
 }
 
-// render does what it's called, it renders a template with the provided data.
+// Render does what it's called, it renders a template with the provided data.
 // It supports caching (if not disabled) and the provided funcs.
-func (g *Giraffe) render(out io.Writer, name string, data interface{}, useLayout bool) error {
-	// Try getting the template from cache
+func (g *Giraffe) Render(out io.Writer, name string, data interface{}, useLayout bool) error {
+	// Try getting the template from cache. We do this with a mutex to not do work we don't need
 	g.mutex.RLock()
 	tpl, ok := g.templates[name]
 	g.mutex.RUnlock()
@@ -84,7 +74,7 @@ func (g *Giraffe) render(out io.Writer, name string, data interface{}, useLayout
 		// We need to add "include" here and not in New(...) because it uses "data"
 		g.config.Funcs["include"] = func(layout string) (template.HTML, error) {
 			buf := new(bytes.Buffer)
-			err := g.render(buf, layout, data, false)
+			err := g.Render(buf, layout, data, false)
 			return template.HTML(buf.String()), err
 		}
 
